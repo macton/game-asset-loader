@@ -124,6 +124,39 @@ GALFS.prototype.init = function(callback, opt_quota) {
 };
 
 /**
+ * Checks if an asset at the given URL already have an up-to-date version 
+ * saved to the filesystem, saves if out of date.
+ * @param {string} key The key path to use for storing the asset.
+ * @param {string} url The URL to the asset.
+ * @param {function} upToDateCallback The function to call when the asset was already up to date.
+ * @param {function} savedCallback The function to call when the asset was saved.
+ * @param {function} failCallback The function to call when an error occurred.
+ */
+GALFS.prototype.cacheAsset = function( key, url, upToDateCallback, savedCallback, failCallback ) {
+  var galfs               = this;
+  var cache_key           = 'GALFS.lastModified.' + key;
+  var cache_last_modified = localStorage[cache_key];
+
+  // Check against URL
+  var xhr = new XMLHttpRequest();
+  xhr.open( "HEAD", url );
+  xhr.addEventListener('load', function() {
+    if (this.status == 200) {
+      var url_last_modified = this.getResponseHeader("Last-Modified");
+      if ( url_last_modified == cache_last_modified ) {
+        upToDateCallback();
+      } else {
+        galfs.saveAsset( key, url, function() { localStorage[cache_key] = url_last_modified; savedCallback(); } , failCallback );
+      }
+    } else {
+      failCallback();
+    }
+  });
+  xhr.addEventListener('error', failCallback);
+  xhr.send();
+}
+
+/**
  * Saves an asset at the given URL to the filesystem API callback when
  * successfully saved.
  * @param {string} key The key path to use for storing the asset.

@@ -103,15 +103,31 @@ GAL.prototype.download = function(bundleName) {
     // Get the full url to the asset.
     var url = that.manifest.assetRoot + key;
     // Fetch full url and store it locally.
-    that.adapter.saveAsset(key, url, function() {
-      fireCallback_(that.progress, bundleName, {
-        current: index + 1,
-        total: bundle.length
+    that.adapter.cacheAsset(key, url, 
+      // up-to-date
+      function() {
+        fireCallback_(that.progress, bundleName, {
+          current: index + 1,
+          total: bundle.length,
+          key: key,
+          url: url,
+          alreadyCached: true
+        }); 
+        // Iterate to the next file.
+        loop(index + 1);
+      },
+      // saved
+      function() { 
+        fireCallback_(that.progress, bundleName, {
+          current: index + 1,
+          total: bundle.length,
+          key: key,
+          url: url,
+          alreadyCached: false
+        });
+        // Iterate to the next file.
+        loop(index + 1);
       });
-      // Iterate to the next file.
-      loop(index + 1);
-    });
-
   })(0);
 };
 
