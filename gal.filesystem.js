@@ -110,6 +110,7 @@ GALFS.prototype.init = function(callback, opt_quota) {
     //    callback();
     //  }, onError);
     that.root = fs.root;
+    callback();
   };
 
   // Callback when the filesystem API has granted quota
